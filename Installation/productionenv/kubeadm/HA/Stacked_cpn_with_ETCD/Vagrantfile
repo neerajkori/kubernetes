@@ -1,0 +1,114 @@
+Vagrant.configure("2") do |config|
+  
+  Vagrantbox = 'centos'
+  # Vagrantbox = 'deb'
+  if "#{Vagrantbox}" == 'centos'
+    VagrantBoxImage = 'centos/7'
+  else
+    # VagrantBoxImage = 'peru/ubuntu-20.04-server-amd64'
+    VagrantBoxImage = 'generic/ubuntu2004'
+  end
+
+  
+  config.vm.define "LoadBalancer" do |lb|
+    lb.vm.provider "virtualbox" do |lb|
+      lb.memory = "2048"
+      lb.cpus = 2
+      lb.name = "LB-HA-Proxy"
+      lb.gui = false
+    end
+    lb.vm.box = "#{VagrantBoxImage}"
+    lb.vm.hostname = "LB-HA-Proxy"
+    lb.vm.network "public_network", bridge: "New Virtual Switch"
+    lb.vm.provision "shell", inline: <<-SHELL
+    echo "nameserver 192.168.1.1" >/etc/resolv.conf
+    >/etc/sysconfig/network-scripts/ifcfg-eth0
+    cat >/etc/sysconfig/network-scripts/ifcfg-eth0<< EOF
+    DEVICE="eth0"
+    BOOTPROTO="static"
+    ONBOOT="yes"
+    TYPE="Ethernet"
+    IPADDR=192.168.1.200
+    NETMASK=255.255.255.0
+    GATEWAY=192.168.1.1
+EOF
+    systemctl restart network.service
+    SHELL
+    lb.vm.provision "shell"  do |script|
+      script.path = "Common.sh"
+      script.args = "#{Vagrantbox}"
+    end 
+    lb.vm.provision "shell"  do |s|
+      s.path = "provision_lb.sh"
+      s.args = "#{Vagrantbox}"
+    end
+  end
+
+  (1..3).each do |i|
+    config.vm.define "kubemaster#{i}" do |kubemaster|
+      kubemaster.vm.provider "virtualbox" do |k, override|
+        k.memory = 2048
+        k.maxmemory = 2048
+        k.cpus = 2
+        k.vmname = "kubemaster#{i}"
+        k.gui = false
+      end
+      kubemaster.vm.network "public_network", bridge: "New Virtual Switch"
+      kubemaster.vm.box = "#{VagrantBoxImage}"
+      kubemaster.vm.hostname = "kubemaster#{i}"
+      kubemaster.vm.provision "shell", inline: <<-SHELL
+      echo "nameserver 192.168.1.1" >/etc/resolv.conf
+      >/etc/sysconfig/network-scripts/ifcfg-eth0
+      cat >>/etc/sysconfig/network-scripts/ifcfg-eth0<< EOF
+      DEVICE="eth0"
+      BOOTPROTO="static"
+      ONBOOT="yes"
+      TYPE="Ethernet"
+      IPADDR=192.168.1.20#{i}
+      NETMASK=255.255.255.0
+      GATEWAY=192.168.1.1
+EOF
+      systemctl restart network.service
+      SHELL
+      kubemaster.vm.provision "shell"  do |script|
+        script.path = "Common.sh"
+        script.args = "#{Vagrantbox}"
+      end
+      # kubemaster.vm.provision "shell"  do |s|
+      #   s.path = "provision_master.sh"
+      #   s.args = "#{Vagrantbox}"
+      # end
+    end
+  end
+  (1..1).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.provider "virtualbox" do |w|
+        w.name = "kubeworker#{i}"
+        w.memory = "1024"
+        w.cpus = "1"
+        w.gui = false
+      end
+      worker.vm.box = "#{VagrantBoxImage}"
+      worker.vm.hostname = "kubeworker#{i}"
+      worker.vm.network "public_network", bridge: "New Virtual Switch"
+      worker.vm.provision "shell", inline: <<-SHELL
+      echo "nameserver 192.168.1.1" >/etc/resolv.conf
+      >/etc/sysconfig/network-scripts/ifcfg-eth0
+      cat >>/etc/sysconfig/network-scripts/ifcfg-eth0<< EOF
+      DEVICE="eth0"
+      BOOTPROTO="static"
+      ONBOOT="yes"
+      TYPE="Ethernet"
+      IPADDR=192.168.1.200
+      NETMASK=255.255.255.0
+      GATEWAY=192.168.1.1
+EOF
+      systemctl restart network.service
+      SHELL
+      worker.vm.provision "shell"  do |script|
+        script.path = "Common.sh"
+        script.args = "#{Vagrantbox}"
+      end
+    end
+  end
+end

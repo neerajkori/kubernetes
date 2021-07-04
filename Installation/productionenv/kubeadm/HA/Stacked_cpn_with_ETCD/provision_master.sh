@@ -94,11 +94,11 @@ EOF
         sudo chown $(id -u):$(id -g) $HOME/.kube/config
     else
         echo "Working on other masters"
-        sshpass -p srvlogin123  scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@kubemaster1.example.com:/tmp/cert-key.txt /tmp
+        sshpass -p srvlogin1234  scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@kubemaster1.example.com:/tmp/cert-key.txt /tmp
         ClusterJoinCertkey_Master=`cat /tmp/cert-key.txt`
         echo -n "Key is:"
         echo $ClusterJoinCertkey_Master
-        Join_Token=`sshpass -p srvlogin123  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@kubemaster1.example.com kubeadm token create --print-join-command`
+        Join_Token=`sshpass -p srvlogin1234  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@kubemaster1.example.com kubeadm token create --print-join-command`
         echo "$Join_Token"  "--control-plane --certificate-key"  $ClusterJoinCertkey_Master | bash
         mkdir -p $HOME/.kube
         sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config

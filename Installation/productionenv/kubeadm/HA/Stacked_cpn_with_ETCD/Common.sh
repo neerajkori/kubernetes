@@ -29,16 +29,16 @@ cat >>/etc/hosts<<EOF
 192.168.1.201   kubemaster1.example.com     kubemaster1
 192.168.1.202   kubemaster2.example.com     kubemaster2
 192.168.1.203   kubemaster3.example.com     kubemaster3
-192.168.1.101   kubeworker1.example.com     kubeworker1
+192.168.1.121    kubeworker1.example.com     kubeworker1
 EOF
 
 else
     
 
-    # echo "Running Script on the Debian Machine."
-    # # Installing common packages for the entire cluster.
-    # echo "[1.  Installing common packages for the entire cluster ]"
-    # apt-get update  -o Acquire::CompressionTypes::Order::=gz ; apt-get -y install vim net-tools sshpass
+    echo "Running Script on the Debian Machine."
+    # Installing common packages for the entire cluster.
+    echo "[1.  Installing common packages for the entire cluster ]"
+    apt-get update  -o Acquire::CompressionTypes::Order::=gz ; apt-get -y install vim net-tools sshpass
     
 
     # Enabling ssh login for root user account.

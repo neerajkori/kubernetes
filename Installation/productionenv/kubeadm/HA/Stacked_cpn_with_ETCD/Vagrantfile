@@ -5,21 +5,28 @@ Vagrant.configure("2") do |config|
   if "#{Vagrantbox}" == 'centos'
     VagrantBoxImage = 'centos/7'
   else
-    # VagrantBoxImage = 'peru/ubuntu-20.04-server-amd64'
-    VagrantBoxImage = 'generic/ubuntu2004'
+    VagrantBoxImage = 'peru/ubuntu-20.04-server-amd64'
   end
 
-  
+  # config.trigger.before :up do |trigger|
+  #   trigger.name = "Hello world"
+  #   trigger.info = "I am running before vagrant up!!"
+  #   trigger.run =  {inline: "VBoxManage natnetwork add --netname k8snat  --network 192.168.4.0/24 --enable --dhcp on"}
+  # end
+
   config.vm.define "LoadBalancer" do |lb|
     lb.vm.provider "virtualbox" do |lb|
-      lb.memory = "2048"
-      lb.cpus = 2
+      lb.memory = "1024"
+      lb.cpus = 1
       lb.name = "LB-HA-Proxy"
       lb.gui = false
     end
     lb.vm.box = "#{VagrantBoxImage}"
-    lb.vm.hostname = "LB-HA-Proxy"
-    lb.vm.network "public_network", bridge: "New Virtual Switch"
+    lb.vm.hostname = "LB-HA-Proxy" 
+    lb.vm.provision "shell"  do |script|
+      script.path = "Common.sh"
+      script.args = "#{Vagrantbox}"
+    end
     lb.vm.provision "shell", inline: <<-SHELL
     echo "nameserver 192.168.1.1" >/etc/resolv.conf
     >/etc/sysconfig/network-scripts/ifcfg-eth0
@@ -32,30 +39,28 @@ Vagrant.configure("2") do |config|
     NETMASK=255.255.255.0
     GATEWAY=192.168.1.1
 EOF
-    systemctl restart network.service
+    # shutdown -h now
     SHELL
-    lb.vm.provision "shell"  do |script|
-      script.path = "Common.sh"
-      script.args = "#{Vagrantbox}"
-    end 
-    lb.vm.provision "shell"  do |s|
-      s.path = "provision_lb.sh"
-      s.args = "#{Vagrantbox}"
+    lb.trigger.after :halt do |trigger|
+    trigger.name = "Running on halt vm"
+    trigger.info = "Changing nic to briedge adaptor"
+    trigger.run =  {inline: "VBoxManage modifyvm LB-HA-Proxy --nic1 bridged --nictype1 82545EM --bridgeadapter1 'Hyper-V Virtual Ethernet Adapter #2'"}
     end
   end
 
   (1..3).each do |i|
     config.vm.define "kubemaster#{i}" do |kubemaster|
-      kubemaster.vm.provider "virtualbox" do |k, override|
+      kubemaster.vm.provider "virtualbox" do |k|
         k.memory = 2048
-        k.maxmemory = 2048
         k.cpus = 2
-        k.vmname = "kubemaster#{i}"
+        k.name = "kubemaster#{i}"
         k.gui = false
       end
-      kubemaster.vm.network "public_network", bridge: "New Virtual Switch"
       kubemaster.vm.box = "#{VagrantBoxImage}"
       kubemaster.vm.hostname = "kubemaster#{i}"
+      kubemaster.vm.provision "shell"  do |script|
+        script.path = "Common.sh"
+        script.args = "#{Vagrantbox}"
       kubemaster.vm.provision "shell", inline: <<-SHELL
       echo "nameserver 192.168.1.1" >/etc/resolv.conf
       >/etc/sysconfig/network-scripts/ifcfg-eth0
@@ -68,16 +73,13 @@ EOF
       NETMASK=255.255.255.0
       GATEWAY=192.168.1.1
 EOF
-      systemctl restart network.service
       SHELL
-      kubemaster.vm.provision "shell"  do |script|
-        script.path = "Common.sh"
-        script.args = "#{Vagrantbox}"
       end
-      # kubemaster.vm.provision "shell"  do |s|
-      #   s.path = "provision_master.sh"
-      #   s.args = "#{Vagrantbox}"
-      # end
+      kubemaster.trigger.after :halt do |trigger|
+        trigger.name = "Running on halt vm"
+        trigger.info = "Changing nic to briedge adaptor"
+        trigger.run =  {inline: "VBoxManage modifyvm kubemaster#{i} --nic1 bridged --nictype1 82545EM --bridgeadapter1 'Hyper-V Virtual Ethernet Adapter #2'"}
+        end
     end
   end
   (1..1).each do |i|
@@ -90,7 +92,10 @@ EOF
       end
       worker.vm.box = "#{VagrantBoxImage}"
       worker.vm.hostname = "kubeworker#{i}"
-      worker.vm.network "public_network", bridge: "New Virtual Switch"
+      worker.vm.provision "shell"  do |script|
+        script.path = "Common.sh"
+        script.args = "#{Vagrantbox}"
+      end
       worker.vm.provision "shell", inline: <<-SHELL
       echo "nameserver 192.168.1.1" >/etc/resolv.conf
       >/etc/sysconfig/network-scripts/ifcfg-eth0
@@ -99,16 +104,16 @@ EOF
       BOOTPROTO="static"
       ONBOOT="yes"
       TYPE="Ethernet"
-      IPADDR=192.168.1.200
+      IPADDR=192.168.1.12{i}
       NETMASK=255.255.255.0
       GATEWAY=192.168.1.1
 EOF
-      systemctl restart network.service
       SHELL
-      worker.vm.provision "shell"  do |script|
-        script.path = "Common.sh"
-        script.args = "#{Vagrantbox}"
-      end
     end
+      # worker.trigger.after :halt do |trigger|
+      #   trigger.name = "Running on halt vm"
+      #   trigger.info = "Changing nic to briedge adaptor"
+      #   trigger.run =  {inline: "VBoxManage modifyvm kubeworker#{i} --nic1 bridged --nictype1 82545EM --bridgeadapter1 'Hyper-V Virtual Ethernet Adapter #2'"}
+      #   end
   end
 end

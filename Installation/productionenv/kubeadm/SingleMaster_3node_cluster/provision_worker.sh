@@ -50,13 +50,16 @@ swapoff -a
 echo "[6. Installing kubelet kubeadm kubectl binary on the woker node.]"
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 # Installing crictl
-RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
+# RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
+RELEASE="v1.21.0"
 DOWNLOAD_DIR=/usr/bin
 CRICTL_VERSION=$RELEASE
-curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+# curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 systemctl enable --now kubelet
 kubectl completion bash >/etc/bash_completion.d/kubectl
 source /etc/bash_completion.d/kubectl
 kubeadm completion bash > /etc/bash_completion.d/kubeadm
 source /etc/bash_completion.d/kubeadm
+
 sshpass -p srvlogin1234  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@192.168.2.200 kubeadm token create --print-join-command  | bash

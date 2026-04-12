@@ -35,13 +35,13 @@ echo "[5. Installing kubeadm binary on the woker node. ]"
 cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/
 enabled=1
 gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-exclude=kubelet kubeadm kubectl
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
+exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 EOF
+
 
 setenforce 0
 sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
@@ -51,15 +51,15 @@ echo "[6. Installing kubelet kubeadm kubectl binary on the woker node.]"
 yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 # Installing crictl
 # RELEASE="$(curl -sSL https://dl.k8s.io/release/stable.txt)"
-RELEASE="v1.21.0"
+RELEASE="v1.35.0"
 DOWNLOAD_DIR=/usr/bin
 CRICTL_VERSION=$RELEASE
-# curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
-curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
+#curl -L "https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.21.0/crictl-v1.21.0-linux-amd64.tar.gz" | sudo tar -C $DOWNLOAD_DIR -xz
 systemctl enable --now kubelet
 kubectl completion bash >/etc/bash_completion.d/kubectl
 source /etc/bash_completion.d/kubectl
 kubeadm completion bash > /etc/bash_completion.d/kubeadm
 source /etc/bash_completion.d/kubeadm
 
-sshpass -p srvlogin1234  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@192.168.2.200 kubeadm token create --print-join-command  | bash
+sshpass -p "root123" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@192.168.2.200  "kubeadm token create --print-join-command"  | bash

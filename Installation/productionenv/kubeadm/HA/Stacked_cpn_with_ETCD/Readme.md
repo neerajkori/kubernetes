@@ -58,9 +58,6 @@ Provision all the vagrant boxes/machine using below vagrant file. This will prov
 
 
 # common configuration to all vms 
-   ```bash
-    yum -y install net-tools sshpass vim 
-   ```
 ```bash
 vim /etc/hosts 
 

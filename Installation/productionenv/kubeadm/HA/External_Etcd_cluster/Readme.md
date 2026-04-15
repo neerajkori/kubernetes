@@ -9,7 +9,7 @@ We can setup the kubernetes HA cluster  using two ways:
 Within this section we will cover the second method i.e External etcd nodes.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
-# Architecture Overview - Stacked etcd
+# Architecture Overview - External etcd
 Given below is the architecture overview diagram for External etcd kubernetes ha cluster.
 
 ![License](https://kubernetes.io/images/kubeadm/kubeadm-ha-topology-external-etcd.svg)
@@ -19,14 +19,14 @@ We will do this setup using 8 virtual machines using vagrant and OracleVirtualBo
 
    | Machine IP  | MAC |Hostname|Description
    | ------------- | ------------- | ----------| ------------|
-   | 192.168.2.20  | Content Cell  |lb.example.com | Load Balancer
-   | 192.168.2.21  | Content Cell  |kubemaster1.example.com | control-plane-1
-   | 192.168.2.22  | Content Cell  |kubemaster2.example.com | control-plane-2
-   | 192.168.2.23  | Content Cell  |kubemaster3.example.com | control-plane-3
-   | 192.168.2.24  | Content Cell  |kubeworker1.example.com | worker-node-1
-   | 192.168.2.27  | Content Cell  |etcd-7.example.com|etcd cluster node-1
-   | 192.168.2.28  | Content Cell  |etcd-8.example.com| etcd cluster node-2
-   | 192.168.2.29  | Content Cell  |etcd-9.example.com|etcd cluster node-3
+   | 192.168.2.20  | must be unique  |lb.example.com | Load Balancer
+   | 192.168.2.21  | must be unique  |kubemaster1.example.com | control-plane-1
+   | 192.168.2.22  | must be unique  |kubemaster2.example.com | control-plane-2
+   | 192.168.2.23  | must be unique  |kubemaster3.example.com | control-plane-3
+   | 192.168.2.24  | must be unique  |kubeworker1.example.com | worker-node-1
+   | 192.168.2.27  | must be unique  |etcd-7.example.com|etcd cluster node-1
+   | 192.168.2.28  | must be unique  |etcd-8.example.com| etcd cluster node-2
+   | 192.168.2.29  | must be unique  |etcd-9.example.com|etcd cluster node-3
 
 Here we have created a seprate etcd cluster with 3 nodes as details shown above. 
 
